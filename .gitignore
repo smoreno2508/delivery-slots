@@ -1,0 +1,24 @@
+# generic java/spring boot
+*.class
+
+#log files
+*.log
+logs/
+
+#package files
+*.jar
+
+#maven
+target/
+
+#maven goals
+classpath/
+.project
+.settings/
+.springBeans
+
+#IDE
+.vscode/
+
+#sensitive files
+.env
