@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reserva de Despacho</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'DM Sans', system-ui, sans-serif; background: #f0f2f5; color: #1a1a2e; min-height: 100vh; }
+
+        .container { max-width: 580px; margin: 2rem auto; padding: 0 1rem; }
+
+        .header {
+            background: linear-gradient(135deg, #1a56db, #1e40af);
+            color: #fff; padding: 1.1rem 1.5rem; border-radius: 14px 14px 0 0;
+            font-size: 1.15rem; font-weight: 700; letter-spacing: -0.02em;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .header a { color: rgba(255,255,255,0.7); text-decoration: none; font-size: 0.85rem; font-weight: 500; }
+        .header a:hover { color: #fff; }
+
+        .card {
+            background: #fff; padding: 1.5rem; margin-bottom: 0.5rem;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+        }
+        .card:last-child { border-radius: 0 0 14px 14px; }
+        .card h2 { font-size: 0.85rem; margin-bottom: 1rem; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600; }
+
+        label { display: block; font-weight: 600; margin-bottom: 0.3rem; font-size: 0.9rem; }
+        select, input {
+            width: 100%; padding: 0.65rem 0.8rem; border: 1.5px solid #dde1e7; border-radius: 10px;
+            font-size: 0.95rem; margin-bottom: 1rem; font-family: inherit;
+            transition: border-color 0.2s;
+        }
+        select:focus, input:focus { outline: none; border-color: #1a56db; box-shadow: 0 0 0 3px rgba(26,86,219,0.1); }
+
+        .btn {
+            width: 100%; padding: 0.85rem; border: none; border-radius: 10px; font-size: 1rem;
+            font-weight: 700; cursor: pointer; transition: all 0.2s; font-family: inherit;
+            letter-spacing: -0.01em;
+        }
+        .btn-primary { background: linear-gradient(135deg, #1a56db, #1e40af); color: #fff; }
+        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(26,86,219,0.35); }
+        .btn-primary:disabled { background: #93c5fd; cursor: not-allowed; transform: none; box-shadow: none; }
+        .btn-outline { background: #fff; color: #dc2626; border: 1.5px solid #fca5a5; }
+        .btn-outline:hover { background: #fef2f2; }
+
+        /* Address resolved */
+        .address-info {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 0.8rem 0; border-bottom: 1.5px solid #f0f2f5; margin-bottom: 1rem;
+        }
+        .address-info .name { font-weight: 700; font-size: 1rem; }
+        .address-info .addr { color: #6b7280; font-size: 0.85rem; margin-top: 2px; }
+        .zone-badge {
+            background: #dbeafe; color: #1a56db; padding: 0.25rem 0.7rem;
+            border-radius: 8px; font-size: 0.78rem; font-weight: 700; white-space: nowrap;
+        }
+
+        /* Date selector */
+        .dates { display: flex; gap: 0.5rem; overflow-x: auto; padding-bottom: 0.5rem; margin-bottom: 1.2rem; }
+        .dates::-webkit-scrollbar { height: 4px; }
+        .dates::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 4px; }
+        .date-btn {
+            flex-shrink: 0; text-align: center; padding: 0.55rem 0.75rem; border: 2px solid #e5e7eb;
+            border-radius: 10px; cursor: pointer; min-width: 64px; transition: all 0.2s; background: #fff;
+        }
+        .date-btn:hover:not(.exhausted) { border-color: #1a56db; background: #f0f5ff; }
+        .date-btn.selected { border-color: #1a56db; background: #dbeafe; }
+        .date-btn.exhausted { opacity: 0.45; cursor: not-allowed; }
+        .date-btn .day-name { font-size: 0.7rem; color: #9ca3af; text-transform: capitalize; font-weight: 500; }
+        .date-btn .day-num { font-weight: 700; font-size: 1.15rem; margin: 1px 0; }
+        .date-btn .month { font-size: 0.7rem; color: #9ca3af; }
+        .date-btn .exhausted-label { font-size: 0.65rem; color: #dc2626; font-weight: 600; }
+
+        /* Slots */
+        .slots { display: grid; gap: 0.5rem; }
+        .slot {
+            display: flex; justify-content: space-between; align-items: center; padding: 0.9rem 1rem;
+            border: 2px solid #e5e7eb; border-radius: 10px; cursor: pointer; transition: all 0.2s;
+        }
+        .slot:hover:not(.exhausted) { border-color: #1a56db; background: #f0f5ff; }
+        .slot.selected { border-color: #1a56db; background: #dbeafe; }
+        .slot.exhausted { opacity: 0.45; cursor: not-allowed; border-style: dashed; }
+        .slot-time { font-weight: 600; font-size: 0.95rem; }
+        .slot-info { text-align: right; }
+        .slot-price { font-weight: 700; color: #1a56db; font-size: 0.95rem; }
+        .slot-capacity { font-size: 0.75rem; margin-top: 2px; }
+        .slot-capacity.available { color: #16a34a; }
+        .slot-capacity.low { color: #ea580c; }
+        .slot-capacity.none { color: #dc2626; font-weight: 600; }
+
+        .msg {
+            padding: 1rem; border-radius: 10px; margin-bottom: 0.8rem; font-weight: 600;
+            text-align: center; font-size: 0.9rem; animation: fadeIn 0.3s;
+        }
+        .msg.success { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+        .msg.error { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+
+        .empty { text-align: center; padding: 2rem; color: #9ca3af; font-size: 0.9rem; }
+        .hidden { display: none; }
+        .loading { text-align: center; padding: 1rem; color: #6b7280; }
+
+        /* Reservation result */
+        .reservation-detail { padding: 0.5rem 0; }
+        .reservation-detail .row { display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #f3f4f6; font-size: 0.9rem; }
+        .reservation-detail .row:last-child { border-bottom: none; }
+        .reservation-detail .label { color: #6b7280; }
+        .reservation-detail .value { font-weight: 600; }
+        .status-badge { padding: 0.2rem 0.6rem; border-radius: 6px; font-size: 0.78rem; font-weight: 700; }
+        .status-badge.confirmed { background: #dcfce7; color: #166534; }
+        .status-badge.cancelled { background: #fef2f2; color: #991b1b; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <span>Reservar horario de despacho</span>
+        <a href="/swagger-ui.html" target="_blank">API Docs</a>
+    </div>
+
+    <div id="message"></div>
+
+    <!-- Step 1: Dirección -->
+    <div class="card" id="step-address">
+        <h2>1. Tu dirección</h2>
+        <label for="commune">Comuna</label>
+        <select id="commune"><option value="">Cargando comunas...</option></select>
+        <label for="address">Dirección</label>
+        <input type="text" id="address" placeholder="Ej: Av. Providencia 1234">
+        <label for="name">Nombre</label>
+        <input type="text" id="name" placeholder="Tu nombre completo">
+        <button class="btn btn-primary" onclick="resolveZone()">Verificar cobertura</button>
+    </div>
+
+    <!-- Step 2: Fechas y slots -->
+    <div class="card hidden" id="step-schedule">
+        <div class="address-info">
+            <div>
+                <div class="name" id="resolved-name"></div>
+                <div class="addr" id="resolved-address"></div>
+            </div>
+            <div>
+                <span class="zone-badge" id="resolved-zone"></span>
+            </div>
+        </div>
+
+        <h2>2. Fecha de despacho</h2>
+        <div class="dates" id="dates"></div>
+
+        <h2>3. Horario</h2>
+        <div class="slots" id="slots"><div class="empty">Selecciona una fecha</div></div>
+
+        <div style="margin-top:1.2rem">
+            <button class="btn btn-primary" id="btn-reserve" onclick="reserve()" disabled>Reservar</button>
+        </div>
+    </div>
+
+    <!-- Step 3: Confirmación -->
+    <div class="card hidden" id="step-confirmation">
+        <h2>Reserva confirmada</h2>
+        <div class="reservation-detail" id="reservation-detail"></div>
+        <div style="margin-top:1rem; display:flex; gap:0.5rem;">
+            <button class="btn btn-outline" style="flex:1" onclick="cancelReservation()">Cancelar reserva</button>
+            <button class="btn btn-primary" style="flex:1" onclick="reset()">Nueva reserva</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const API = '';
+    let state = { zoneId: null, zoneName: '', selectedDate: null, selectedWindow: null, reservationId: null };
+
+    // ====== Step 1: Cargar comunas y resolver zona ======
+
+    async function loadCommunes() {
+        const select = document.getElementById('commune');
+        try {
+            const zones = await fetch(`${API}/api/zones`).then(r => r.json());
+            select.innerHTML = '<option value="">Selecciona tu comuna</option>';
+            for (const zone of zones) {
+                const communes = await fetch(`${API}/api/zones/${zone.id}/communes`).then(r => r.json());
+                const group = document.createElement('optgroup');
+                group.label = zone.name;
+                communes.forEach(c => {
+                    const opt = document.createElement('option');
+                    opt.value = c;
+                    opt.textContent = c;
+                    group.appendChild(opt);
+                });
+                select.appendChild(group);
+            }
+        } catch (e) {
+            select.innerHTML = '<option value="">Error cargando comunas</option>';
+        }
+    }
+
+    async function resolveZone() {
+        const commune = document.getElementById('commune').value;
+        const address = document.getElementById('address').value;
+        const name = document.getElementById('name').value;
+
+        if (!commune || !address || !name) {
+            showMessage('Completa todos los campos', 'error');
+            return;
+        }
+
+        try {
+            const zone = await fetch(`${API}/api/zones/resolve?commune=${encodeURIComponent(commune)}`).then(r => {
+                if (!r.ok) throw new Error('Sin cobertura');
+                return r.json();
+            });
+
+            state.zoneId = zone.id;
+            state.zoneName = zone.name;
+
+            document.getElementById('resolved-name').textContent = name;
+            document.getElementById('resolved-address').textContent = `${address}, ${commune}`;
+            document.getElementById('resolved-zone').textContent = zone.name;
+
+            document.getElementById('step-address').classList.add('hidden');
+            document.getElementById('step-schedule').classList.remove('hidden');
+            clearMessage();
+
+            loadDates();
+        } catch (e) {
+            showMessage(`No hay cobertura de despacho para la comuna: ${commune}`, 'error');
+        }
+    }
+
+    // ====== Step 2: Fechas y slots ======
+
+    async function loadDates() {
+        const container = document.getElementById('dates');
+        container.innerHTML = '<div class="loading">Cargando fechas...</div>';
+
+        try {
+            const dates = await fetch(`${API}/api/windows/dates?zoneId=${state.zoneId}`).then(r => r.json());
+
+            if (dates.length === 0) {
+                container.innerHTML = '<div class="empty">No hay fechas disponibles</div>';
+                return;
+            }
+
+            const dayNames = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+            const monthNames = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+
+            container.innerHTML = '';
+            dates.forEach(d => {
+                const date = new Date(d.date + 'T12:00:00');
+                const btn = document.createElement('div');
+                btn.className = 'date-btn' + (d.available ? '' : ' exhausted');
+                btn.innerHTML = `
+                    <div class="day-name">${dayNames[date.getDay()]}</div>
+                    <div class="day-num">${date.getDate()}</div>
+                    <div class="month">${monthNames[date.getMonth()]}</div>
+                    ${d.available ? '' : '<div class="exhausted-label">Agotado</div>'}
+                `;
+                if (d.available) {
+                    btn.onclick = () => selectDate(d.date, btn);
+                }
+                container.appendChild(btn);
+            });
+        } catch (e) {
+            container.innerHTML = '<div class="empty">Error cargando fechas</div>';
+        }
+    }
+
+    function selectDate(date, btn) {
+        document.querySelectorAll('.date-btn').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        state.selectedDate = date;
+        state.selectedWindow = null;
+        document.getElementById('btn-reserve').disabled = true;
+        loadSlots(date);
+    }
+
+    async function loadSlots(date) {
+        const container = document.getElementById('slots');
+        container.innerHTML = '<div class="loading">Cargando horarios...</div>';
+
+        try {
+            const slots = await fetch(`${API}/api/windows?zoneId=${state.zoneId}&date=${date}`).then(r => r.json());
+
+            if (slots.length === 0) {
+                container.innerHTML = '<div class="empty">No hay horarios para esta fecha</div>';
+                return;
+            }
+
+            container.innerHTML = '';
+            slots.forEach(s => {
+                const div = document.createElement('div');
+                div.className = 'slot' + (s.exhausted ? ' exhausted' : '');
+
+                const capClass = s.exhausted ? 'none' : s.availableCapacity <= 1 ? 'low' : 'available';
+                const capText = s.exhausted ? 'Agotado' : `${s.availableCapacity} disponible${s.availableCapacity > 1 ? 's' : ''}`;
+
+                div.innerHTML = `
+                    <div class="slot-time">${formatTime(s.startTime)} - ${formatTime(s.endTime)}</div>
+                    <div class="slot-info">
+                        <div class="slot-price">$${Number(s.cost).toLocaleString('es-CL')}</div>
+                        <div class="slot-capacity ${capClass}">${capText}</div>
+                    </div>
+                `;
+
+                if (!s.exhausted) {
+                    div.onclick = () => selectSlot(s, div);
+                }
+                container.appendChild(div);
+            });
+        } catch (e) {
+            container.innerHTML = '<div class="empty">Error cargando horarios</div>';
+        }
+    }
+
+    function selectSlot(slot, div) {
+        document.querySelectorAll('.slot').forEach(s => s.classList.remove('selected'));
+        div.classList.add('selected');
+        state.selectedWindow = slot;
+        document.getElementById('btn-reserve').disabled = false;
+    }
+
+    function formatTime(time) {
+        const [h, m] = time.split(':');
+        return `${h}:${m}`;
+    }
+
+    // ====== Step 3: Reservar ======
+
+    async function reserve() {
+        const btn = document.getElementById('btn-reserve');
+        btn.disabled = true;
+        btn.textContent = 'Reservando...';
+
+        try {
+            const body = {
+                windowId: state.selectedWindow.id,
+                zoneId: state.zoneId,
+                commune: document.getElementById('commune').value,
+                customerName: document.getElementById('name').value,
+                customerAddress: document.getElementById('address').value
+            };
+
+            const res = await fetch(`${API}/api/reservations`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+
+            if (!res.ok) {
+                const err = await res.json();
+                throw new Error(err.message || 'Error al reservar');
+            }
+
+            const reservation = await res.json();
+            state.reservationId = reservation.id;
+
+            showReservation(reservation);
+            document.getElementById('step-schedule').classList.add('hidden');
+            document.getElementById('step-confirmation').classList.remove('hidden');
+            showMessage('¡Reserva confirmada!', 'success');
+
+        } catch (e) {
+            showMessage(e.message, 'error');
+            btn.disabled = false;
+        }
+        btn.textContent = 'Reservar';
+    }
+
+    function showReservation(r) {
+        const slot = state.selectedWindow;
+        const container = document.getElementById('reservation-detail');
+        container.innerHTML = `
+            <div class="row"><span class="label">N° Reserva</span><span class="value">#${r.id}</span></div>
+            <div class="row"><span class="label">Estado</span><span class="status-badge ${r.status.toLowerCase()}">${r.status === 'CONFIRMED' ? 'Confirmada' : 'Cancelada'}</span></div>
+            <div class="row"><span class="label">Nombre</span><span class="value">${r.customerName}</span></div>
+            <div class="row"><span class="label">Dirección</span><span class="value">${r.customerAddress}</span></div>
+            <div class="row"><span class="label">Comuna</span><span class="value">${r.commune}</span></div>
+            <div class="row"><span class="label">Zona</span><span class="value">${state.zoneName}</span></div>
+            <div class="row"><span class="label">Fecha</span><span class="value">${formatDisplayDate(state.selectedDate)}</span></div>
+            <div class="row"><span class="label">Horario</span><span class="value">${formatTime(slot.startTime)} - ${formatTime(slot.endTime)}</span></div>
+            <div class="row"><span class="label">Costo</span><span class="value">$${Number(slot.cost).toLocaleString('es-CL')}</span></div>
+        `;
+    }
+
+    function formatDisplayDate(dateStr) {
+        const date = new Date(dateStr + 'T12:00:00');
+        return date.toLocaleDateString('es-CL', { weekday: 'long', day: 'numeric', month: 'long' });
+    }
+
+    // ====== Cancelar ======
+
+    async function cancelReservation() {
+        if (!confirm('¿Estás seguro de cancelar esta reserva?')) return;
+
+        try {
+            const res = await fetch(`${API}/api/reservations/${state.reservationId}`, { method: 'DELETE' });
+            if (!res.ok) throw new Error('Error al cancelar');
+            const reservation = await res.json();
+
+            showMessage('Reserva cancelada', 'error');
+            // Actualizar la vista con el estado cancelado
+            const statusBadge = document.querySelector('.status-badge');
+            statusBadge.className = 'status-badge cancelled';
+            statusBadge.textContent = 'Cancelada';
+        } catch (e) {
+            showMessage(e.message, 'error');
+        }
+    }
+
+    // ====== Reset ======
+
+    function reset() {
+        state = { zoneId: null, zoneName: '', selectedDate: null, selectedWindow: null, reservationId: null };
+        document.getElementById('step-address').classList.remove('hidden');
+        document.getElementById('step-schedule').classList.add('hidden');
+        document.getElementById('step-confirmation').classList.add('hidden');
+        document.getElementById('address').value = '';
+        document.getElementById('name').value = '';
+        document.getElementById('commune').selectedIndex = 0;
+        clearMessage();
+    }
+
+    // ====== Messages ======
+
+    function showMessage(text, type) {
+        document.getElementById('message').innerHTML = `<div class="msg ${type}">${text}</div>`;
+    }
+    function clearMessage() {
+        document.getElementById('message').innerHTML = '';
+    }
+
+    // ====== Init ======
+    loadCommunes();
+</script>
+</body>
+</html>

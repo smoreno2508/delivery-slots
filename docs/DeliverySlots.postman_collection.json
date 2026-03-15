@@ -1,0 +1,299 @@
+{
+  "info": {
+    "name": "Delivery Slots API",
+    "description": "Test completo del sistema de reserva de ventanas de despacho",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080" }
+  ],
+  "item": [
+    {
+      "name": "1. Zonas",
+      "item": [
+        {
+          "name": "1.1 Listar todas las zonas",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/zones"
+          }
+        },
+        {
+          "name": "1.2 Resolver zona por comuna (Providencia → Centro)",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/zones/resolve?commune=Providencia"
+          }
+        },
+        {
+          "name": "1.3 Resolver zona por comuna (Las Condes → Norte)",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/zones/resolve?commune=Las Condes"
+          }
+        },
+        {
+          "name": "1.4 Resolver zona por comuna (Maipu → Sur)",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/zones/resolve?commune=Maipu"
+          }
+        },
+        {
+          "name": "1.5 ERROR — Comuna sin cobertura",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/zones/resolve?commune=Narnia"
+          }
+        },
+        {
+          "name": "1.6 Comunas de Zona Norte (id=1)",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/zones/1/communes"
+          }
+        },
+        {
+          "name": "1.7 Comunas de Zona Centro (id=2)",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/zones/2/communes"
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Ventanas",
+      "item": [
+        {
+          "name": "2.1 Fechas disponibles para Zona Norte (id=1)",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/windows/dates?zoneId=1"
+          }
+        },
+        {
+          "name": "2.2 Fechas disponibles para Zona Sur (id=3)",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/windows/dates?zoneId=3"
+          }
+        },
+        {
+          "name": "2.3 Ventanas del 15 mar para Zona Norte",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/windows?zoneId=1&date=2026-03-15"
+          }
+        },
+        {
+          "name": "2.4 Ventanas del 15 mar para Zona Sur (capacidad menor)",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/windows?zoneId=3&date=2026-03-15"
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Reservas — Flujo exitoso",
+      "item": [
+        {
+          "name": "3.1 Reservar ventana 1, Zona Norte, Huechuraba",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/reservations",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"windowId\": 1,\n  \"zoneId\": 1,\n  \"commune\": \"Huechuraba\",\n  \"customerName\": \"Juan Pérez\",\n  \"customerAddress\": \"Av. Recoleta 1234\"\n}"
+            }
+          }
+        },
+        {
+          "name": "3.2 Reservar ventana 1, Zona Centro, Providencia",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/reservations",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"windowId\": 1,\n  \"zoneId\": 2,\n  \"commune\": \"Providencia\",\n  \"customerName\": \"María López\",\n  \"customerAddress\": \"Av. Providencia 567\"\n}"
+            }
+          }
+        },
+        {
+          "name": "3.3 Consultar reserva creada (id=1)",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/reservations/1"
+          }
+        },
+        {
+          "name": "3.4 Verificar capacidad reducida (ventana 1, zona 1)",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/windows?zoneId=1&date=2026-03-15"
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Reservas — Validaciones",
+      "item": [
+        {
+          "name": "4.1 ERROR — Campos vacíos (400)",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/reservations",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"windowId\": null,\n  \"zoneId\": null,\n  \"commune\": \"\",\n  \"customerName\": \"\",\n  \"customerAddress\": \"\"\n}"
+            }
+          }
+        },
+        {
+          "name": "4.2 ERROR — Comuna no coincide con zona (400)",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/reservations",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"windowId\": 1,\n  \"zoneId\": 1,\n  \"commune\": \"Providencia\",\n  \"customerName\": \"Test Mismatch\",\n  \"customerAddress\": \"Dirección test\"\n}"
+            }
+          }
+        },
+        {
+          "name": "4.3 ERROR — Ventana inexistente (404)",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/reservations",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"windowId\": 9999,\n  \"zoneId\": 1,\n  \"commune\": \"Huechuraba\",\n  \"customerName\": \"Test Not Found\",\n  \"customerAddress\": \"Dirección test\"\n}"
+            }
+          }
+        },
+        {
+          "name": "4.4 ERROR — Reserva inexistente (404)",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/reservations/9999"
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Agotar slot y verificar",
+      "item": [
+        {
+          "name": "5.1 Reservar — 2do slot Zona Norte ventana 1",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/reservations",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"windowId\": 1,\n  \"zoneId\": 1,\n  \"commune\": \"Las Condes\",\n  \"customerName\": \"Pedro Soto\",\n  \"customerAddress\": \"Av. Apoquindo 890\"\n}"
+            }
+          }
+        },
+        {
+          "name": "5.2 ERROR — Zona Norte agotada en ventana 1 (409)",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/api/reservations",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"windowId\": 1,\n  \"zoneId\": 1,\n  \"commune\": \"Vitacura\",\n  \"customerName\": \"Ana Torres\",\n  \"customerAddress\": \"Av. Vitacura 456\"\n}"
+            }
+          }
+        },
+        {
+          "name": "5.3 Verificar ventana 1 muestra agotada para Norte",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/windows?zoneId=1&date=2026-03-15"
+          }
+        },
+        {
+          "name": "5.4 Pero Zona Sur aún tiene espacio en ventana 1",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/windows?zoneId=3&date=2026-03-15"
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Cancelación",
+      "item": [
+        {
+          "name": "6.1 Cancelar reserva 1",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/api/reservations/1"
+          }
+        },
+        {
+          "name": "6.2 Verificar estado CANCELLED",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/reservations/1"
+          }
+        },
+        {
+          "name": "6.3 Cancelar de nuevo (idempotente — no error)",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/api/reservations/1"
+          }
+        },
+        {
+          "name": "6.4 Capacidad liberada — Norte tiene espacio de nuevo",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/api/windows?zoneId=1&date=2026-03-15"
+          }
+        },
+        {
+          "name": "6.5 ERROR — Cancelar reserva inexistente (404)",
+          "request": {
+            "method": "DELETE",
+            "url": "{{baseUrl}}/api/reservations/9999"
+          }
+        }
+      ]
+    },
+    {
+      "name": "7. Swagger UI",
+      "item": [
+        {
+          "name": "7.1 Abrir documentación API",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/swagger-ui.html"
+          }
+        }
+      ]
+    }
+  ]
+}
