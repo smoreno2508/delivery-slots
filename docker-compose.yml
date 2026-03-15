@@ -1,0 +1,40 @@
+services:
+  # Base de datos PostgreSQL
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${DB_NAME:-deliveryslots}
+      POSTGRES_USER: ${DB_USER:-deliveryslots}
+      POSTGRES_PASSWORD: ${DB_PASS:-deliveryslots}
+    ports:
+      - "5432:5432"
+    volumes:
+      # Persistir datos entre reinicios del contenedor
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      # Docker verifica que PostgreSQL esté listo antes de arrancar la app
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-deliveryslots}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Aplicación Spring Boot
+  app:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: pg
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME:-deliveryslots}
+      DB_USER: ${DB_USER:-deliveryslots}
+      DB_PASS: ${DB_PASS:-deliveryslots}
+    depends_on:
+      db:
+        # Espera a que el healthcheck de PostgreSQL pase antes de arrancar
+        condition: service_healthy
+
+# Volumen persistente para PostgreSQL
+volumes:
+  pgdata:
