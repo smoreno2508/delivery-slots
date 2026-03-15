@@ -1,7 +1,6 @@
 package com.deliveryslots.repository;
 
 import com.deliveryslots.entity.DeliveryWindow;
-import com.deliveryslots.entity.WindowZoneCapacity;
 
 import jakarta.persistence.LockModeType;
 

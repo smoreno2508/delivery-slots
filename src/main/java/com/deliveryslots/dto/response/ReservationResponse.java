@@ -30,11 +30,19 @@ public class ReservationResponse {
     }
 
     public Long getId() { return id; }
+    public void setId(Long id) { this.id = id; }
     public Long getWindowId() { return windowId; }
+    public void setWindowId(Long windowId) { this.windowId = windowId; }
     public Long getZoneId() { return zoneId; }
+    public void setZoneId(Long zoneId) { this.zoneId = zoneId; }
     public String getCommune() { return commune; }
+    public void setCommune(String commune) { this.commune = commune; }
     public String getCustomerName() { return customerName; }
+    public void setCustomerName(String customerName) { this.customerName = customerName; }
     public String getCustomerAddress() { return customerAddress; }
+    public void setCustomerAddress(String customerAddress) { this.customerAddress = customerAddress; }
     public ReservationStatus getStatus() { return status; }
+    public void setStatus(ReservationStatus status) { this.status = status; }
     public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 }
